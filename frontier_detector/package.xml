@@ -1,0 +1,51 @@
+<?xml version='1.0' encoding='utf-8'?>
+<package format="3">
+  <name>frontier_detector</name>
+  <version>0.0.0</version>
+  <description>The frontier_detector package</description>
+  <maintainer email="jplaced@unizar.es">julio</maintainer>
+  <license>TODO</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <buildtool_depend>ament_cmake_python</buildtool_depend>
+
+  <buildtool_depend>rosidl_default_generators</buildtool_depend>
+  <build_depend>rclcpp</build_depend>
+  <build_depend>rclpy</build_depend>
+  <build_depend>tf2_ros</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>nav_msgs</build_depend>
+  <build_depend>visualization_msgs</build_depend>
+  <!-- <build_depend>dynamic_reconfigure</build_depend> -->
+  <build_depend>octomap_ros</build_depend>
+  <build_depend>orb_slam2_ros</build_depend>
+  <build_depend>builtin_interfaces</build_depend>
+  <build_depend>tf2</build_depend>
+  <build_depend>tf2_geometry_msgs</build_depend>
+  <build_depend>plansys2_msgs</build_depend>
+
+  <exec_depend>plansys2_msgs</exec_depend>
+  <exec_depend>tf2_geometry_msgs</exec_depend>
+  <exec_depend>tf2</exec_depend>
+  <exec_depend>builtin_interfaces</exec_depend>
+  <exec_depend>rosidl_default_runtime</exec_depend>
+  <exec_depend>rclcpp</exec_depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>visualization_msgs</exec_depend>
+  <!-- <exec_depend>dynamic_reconfigure</exec_depend> -->
+  <exec_depend>octomap_ros</exec_depend>
+  <exec_depend>orb_slam2_ros</exec_depend>
+  <build_depend>cv_bridge</build_depend>
+  <exec_depend>cv_bridge</exec_depend>
+  <member_of_group>rosidl_interface_packages</member_of_group>
+
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

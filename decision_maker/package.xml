@@ -1,0 +1,29 @@
+<?xml version='1.0' encoding='utf-8'?>
+<package format="3">
+  <name>decision_maker</name>
+  <version>0.0.0</version>
+  <description>The decision_maker package</description>
+  <maintainer email="jplaced@unizar.es">julio</maintainer>
+  <license>TODO</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_python</buildtool_depend>
+
+  <build_depend>rclcpp</build_depend>
+  <build_depend>rclpy</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>orb_slam2_ros</build_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-numba</exec_depend>
+  <exec_depend>python3-scipy</exec_depend>
+  <exec_depend>python3-sklearn</exec_depend>
+  <exec_depend>python3-networkx</exec_depend>
+  <exec_depend>python3-actionlib</exec_depend>
+  <exec_depend>rclcpp</exec_depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>orb_slam2_ros</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
