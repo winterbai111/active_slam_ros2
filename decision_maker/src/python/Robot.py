@@ -89,7 +89,7 @@ class Robot:
         # self.client = ActionClient(self.node, self.name + '/move_base', 'MoveBaseAction')
         # self.client.wait_for_server()
         self.client = ActionClient(self.node, NavigateToPose, 'navigate_to_pose')
-        while not self.client.wait_for_service(timeout_sec=1):
+        while not self.client.wait_for_server(timeout_sec=1):
                         node.get_logger().info(f"Waiting for navigation client to become available.")
         # self.client.wait_for_server()
 
