@@ -36,6 +36,7 @@
 #include "LoopClosing.h"
 #include "KeyFrameDatabase.h"
 #include "ORBVocabulary.h"
+#include "MapGraphPublisher.h"
 
 namespace ORB_SLAM2
 {
@@ -46,6 +47,8 @@ class LocalMapping;
 class LoopClosing;
 
 struct ORBParameters;
+
+class MapGraphPublisher;
 
 class System
 {
@@ -136,6 +139,10 @@ public:
     // Returns true if Global Bundle Adjustment is running
     bool isRunningGBA();
 
+    void saveVertex(std::list<float>& l);
+    void saveEdges(std::list<float>& l);
+    void saveMapPoints(std::list<float>& l);
+
     std::list<float> getVertex();
     std::list<float> getEdges();
     std::list<float> getMapPoints();
@@ -207,6 +214,10 @@ private:
 
     // Current position
     cv::Mat current_position_;
+
+    // Pose graph and map publisher
+    MapGraphPublisher* pMapGraphPublisher_;
+    std::thread* tMapGraphPublisher_;
 
     std::list<float> lVertices_, lEdges_, lMapPoints_;
     std::mutex mVertices_, mEdges_, mMapPoints_;

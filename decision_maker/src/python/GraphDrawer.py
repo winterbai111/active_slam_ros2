@@ -52,7 +52,7 @@ def node(args = None):
 
     rate = node.create_rate(1)
 
-    camera_type = node.declare_parameter('~camera_type', 'rgbd').value
+    camera_type = node.declare_parameter('~camera_type', 'RGBD').value
 
     node.create_subscription(Float64MultiArray, camera_type + "/vertex_list", vertexCallBack,10)
     node.create_subscription(Float64MultiArray, camera_type + "/edge_list", edgesCallBack,10)

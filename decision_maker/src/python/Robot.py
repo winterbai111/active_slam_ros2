@@ -28,6 +28,7 @@ from rclpy.node import Node
 from tf2_ros import Buffer, TransformListener
 
 import tf2_geometry_msgs
+from action_msgs.msg import GoalStatus
 
 
 
@@ -89,7 +90,7 @@ class Robot:
         # self.client = ActionClient(self.node, self.name + '/move_base', 'MoveBaseAction')
         # self.client.wait_for_server()
         self.client = ActionClient(self.node, NavigateToPose, 'navigate_to_pose')
-        while not self.client.wait_for_service(timeout_sec=1):
+        while not self.client.wait_for_server(timeout_sec=1.0):
                         node.get_logger().info(f"Waiting for navigation client to become available.")
         # self.client.wait_for_server()
 
@@ -302,18 +303,43 @@ class Robot:
         # start = self.listener.transformPose(self.global_frame, self.start)
         # end = self.listener.transformPose(self.global_frame, self.end)
 
-        transform_start = self.tfBuffer_.lookup_transform(self.global_frame,
-                                       self.start.header.frame_id,
-                                       self.start.header.stamp,
-                                       rclpy.duration.Duration(seconds=1))
-        start = tf2_geometry_msgs.do_transform_pose(self.start.pose, transform_start)
+        # transform_start = self.tfBuffer_.lookup_transform(self.global_frame,
+        #                                self.start.header.frame_id,
+        #                                self.start.header.stamp,
+        #                                rclpy.duration.Duration(seconds=1))
+        # start = tf2_geometry_msgs.do_transform_pose(self.start.pose, transform_start)
 
-        transform_end = self.tfBuffer_.lookup_transform(self.global_frame,
-                                       self.end.header.frame_id,
-                                       self.end.header.stamp,
-                                       rclpy.duration.Duration(seconds=1))
-        end = tf2_geometry_msgs.do_transform_pose(self.end.pose, transform_end)
+        # transform_end = self.tfBuffer_.lookup_transform(self.global_frame,
+        #                                self.end.header.frame_id,
+        #                                self.end.header.stamp,
+        #                                rclpy.duration.Duration(seconds=1))
+        # end = tf2_geometry_msgs.do_transform_pose(self.end.pose, transform_end)
 
-        plan = self.make_plan(start=start, goal=end, tolerance=0.1)
+        # plan = self.make_plan(start=start, goal=end, tolerance=0.1)
 
-        return plan.plan.poses
+        # return plan.plan.poses
+    
+        while not self._action_client.wait_for_server(timeout_sec=1.0):
+            self.node.get_logger().info("'ComputePathToPose' action server not available, waiting...")
+
+        goal_msg = ComputePathToPose.Goal()
+        goal_msg.goal = self.end
+        goal_msg.start = self.start
+
+        # self.node.get_logger().info('Getting path...')
+        send_goal_future = self._action_client.send_goal_async(goal_msg)
+        rclpy.spin_until_future_complete(self.node, send_goal_future)
+        self.goal_handle = send_goal_future.result()
+
+        if not self.goal_handle.accepted:
+            self.node.get_logger().error('Get path was rejected!')
+            return None
+
+        self.result_future = self.goal_handle.get_result_async()
+        rclpy.spin_until_future_complete(self.node, self.result_future)
+        self.status = self.result_future.result().status
+        if self.status != GoalStatus.STATUS_SUCCEEDED:
+            self.node.get_logger().warn('Getting path failed with status code: {0}'.format(self.status))
+            return None
+
+        return self.result_future.result().result.path.poses

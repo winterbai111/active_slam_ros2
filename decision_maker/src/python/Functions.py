@@ -15,6 +15,9 @@ from typing import Tuple
 from visualization_msgs.msg import Marker
 from nav_msgs.msg import OccupancyGrid
 
+from rclpy.time import Duration
+from rclpy.node import Node
+
 # NUMBA imports for GPU computations
 try:
     import numba as nb
@@ -82,7 +85,7 @@ def yawBtw2Points(pointA: np.array, pointB: np.array) -> float:
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def createMarker(mtype: str = "point", frame: str = "/map", ns: str = "marker_ns", lifetime: float = 0,
-                 colors: ndarray = None, alpha: float = 1.0, scale: float = 0.3) -> Marker:
+                 colors: ndarray = None, alpha: float = 1.0, scale: float = 0.3, node:Node = None) -> Marker:
     """
     Initializes a ROS visualization_msgs Marker
     """
@@ -91,7 +94,7 @@ def createMarker(mtype: str = "point", frame: str = "/map", ns: str = "marker_ns
 
     marker = Marker()
     marker.header.frame_id = frame
-    marker.header.stamp = rclpy.Time.now()
+    marker.header.stamp = node.get_clock().now().to_msg()
     marker.ns = ns
     marker.id = 0
     marker.action = Marker.ADD
@@ -100,7 +103,7 @@ def createMarker(mtype: str = "point", frame: str = "/map", ns: str = "marker_ns
     marker.color.r = colors[0]
     marker.color.g = colors[1]
     marker.color.b = colors[2]
-    marker.lifetime = rclpy.Duration(lifetime)
+    marker.lifetime = Duration(seconds=lifetime).to_msg()
 
     marker.pose.orientation.x = 0.0
     marker.pose.orientation.y = 0.0

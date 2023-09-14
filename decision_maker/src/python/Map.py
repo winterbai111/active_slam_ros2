@@ -207,7 +207,7 @@ class Map():
             # TODO Handle culled KFs (that dict key no longer exist). KF culling disabled for now
             if i_dict in self.Tcw:
                 t = self.Tcw[i_dict].translation()
-                r = Rotation.from_dcm(self.Tcw[i_dict].rotationMatrix())
+                r = Rotation.from_matrix(self.Tcw[i_dict].rotationMatrix())
                 pose = [t, r.as_quat()]  # x, y, z, w
                 nodes.append(np.concatenate([np.array([i]), pose]).ravel())
 
@@ -294,7 +294,7 @@ class Map():
             # TODO Handle culled KFs (that dict key no longer exist). KF culling disabled for now
             if i_dict in self.Tcw:
                 vertex_marker = createMarker(mtype="sphere", frame=global_frame, ns="graph_ns", colors=c1,
-                                             lifetime=0, alpha=a, scale=sc1)
+                                             lifetime=0, alpha=a, scale=sc1,node = self.node)
                 vertex_marker.id = id_markers
                 t = self.Tcw[i_dict].translation()
                 vertex_marker.pose.position.x = t[0]
@@ -316,7 +316,7 @@ class Map():
                 # TODO Handle culled KFs (that dict key no longer exist). KF culling disabled for now
                 if i_dict in self.Tcw and j_dict in self.Tcw:
                     edge_marker = createMarker(mtype="lines", frame=global_frame, ns="graph_ns", colors=c2,
-                                               lifetime=0, alpha=a, scale=sc2)
+                                               lifetime=0, alpha=a, scale=sc2, node = self.node)
                     edge_marker.id = id_markers
                     p = Point()
                     # Edge's starting position
@@ -378,7 +378,7 @@ class Map():
         for (k, v) in reloc_kfs.items():
             if int(k) in self.Tcw:
                 p_temp = self.Tcw[int(k)].translation()
-                r_temp = Rotation.from_dcm(self.Tcw[int(k)].rotationMatrix())
+                r_temp = Rotation.from_matrix(self.Tcw[int(k)].rotationMatrix())
                 q_temp = r_temp.as_quat()
                 robot_pose2 = Pose()
                 robot_pose2.position.x = p_temp[0]

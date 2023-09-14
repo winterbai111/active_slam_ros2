@@ -55,6 +55,14 @@
 #include "tf2_ros/create_timer_ros.h"
 #include "tf2/utils.h"
 #include <tf2_eigen/tf2_eigen.h>
+#include "tf2/transform_datatypes.h"
+
+#include <tf2_ros/transform_broadcaster.h>
+#include <tf2_ros/transform_listener.h>
+#include <tf2_ros/buffer.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2_eigen/tf2_eigen.h>
+#include <tf2/convert.h>
 
 #include "orb_slam2_ros/srv/save_map.hpp"
 
@@ -95,7 +103,11 @@ private:
     const shared_ptr<orb_slam2_ros::srv::SaveMap::Request> request,
     const shared_ptr<orb_slam2_ros::srv::SaveMap::Response> response);
   void LoadOrbParameters(sensor_msgs::msg::CameraInfo::SharedPtr camera_info);
+  void LoadOrbParameters_manually();
   void cameraInfoCallback(sensor_msgs::msg::CameraInfo::SharedPtr msg);
+
+  bool getTfTransformMatrix(Eigen::Affine3d &transform_matrix, const std::string source_frame, const std::string target_frame);
+  tf2::Transform TransformToTarget (tf2::Transform tf_in, std::string frame_in, std::string frame_target);
 
   tf2::Transform TransformFromMat(cv::Mat position_mat);
   sensor_msgs::msg::PointCloud2 MapPointsToPointCloud(
@@ -147,6 +159,10 @@ private:
   void publishVertices(std::list<float>& l);
   void publishEdges(std::list<float>& l);
   void publishPoints(std::list<float>& l);
+
+  Eigen::Matrix3d cam_base_R_;
+  Eigen::Vector3d cam_base_T_;
+  Eigen::Matrix3d cam_base_bia_;
 };
 
 #endif  // NODE_HPP_

@@ -334,7 +334,7 @@ class WeightedPoseGraph:
         # Add vertices
         for i in range(1, n+1):
             vertex_marker = createMarker(mtype="sphere", frame=global_frame, ns="graph_ns", colors=c1, lifetime=lt,
-                                         alpha=a, scale=sc1)
+                                         alpha=a, scale=sc1,node = self.node)
             vertex_marker.id = id_markers
 
             if i in all_t:
@@ -348,7 +348,7 @@ class WeightedPoseGraph:
 
         # Add edges
         edge_marker = createMarker(mtype="lines", frame=global_frame, ns="graph_ns", colors=c2, lifetime=lt, alpha=a,
-                                   scale=sc2)
+                                   scale=sc2, node = self.node)
         for (u, v, wt) in self.graph.edges.data('type'):
             u_int = int(u)
             v_int = int(v)
@@ -381,7 +381,7 @@ class WeightedPoseGraph:
         """
 
         # Initialize hallucinated graph
-        G_frontier = WeightedPoseGraph()
+        G_frontier = WeightedPoseGraph(node=self.node)
         G_frontier.copyGraph(self.graph)
 
         hallucinated_graph_marker = MarkerArray()
@@ -396,7 +396,7 @@ class WeightedPoseGraph:
         pose_frontier = Pose()
         pose_frontier.position.x = xy_frontier[0]  # == plan[n_points-1].pose.position.x
         pose_frontier.position.y = xy_frontier[1]  # == plan[n_points-1].pose.position.y
-        pose_frontier.position.z = 0
+        pose_frontier.position.z = 0.0
         # Add orientation at frontier's location
         R_frontier = Rotation.from_euler('xyz', [0., 0., yawBtw2Points(xy_robot, xy_frontier)], degrees=False)
         q_frontier = R_frontier.as_quat()
@@ -416,7 +416,7 @@ class WeightedPoseGraph:
             plan_nodes = np.ceil(n_points / self.th_plan_points)
             new_nodes = np.sort(np.random.choice(np.arange(1, n_points - 2), int(plan_nodes), replace=False))
             new_nodes = np.append(new_nodes, n_points-1)  # Add one last node at frontier's location
-            self.get_logger().info(self.get_name() + ": Plan length " + format(n_points+1) + " generated " + format(plan_nodes)
+            self.node.get_logger().info(self.node.get_name() + ": Plan length " + format(n_points+1) + " generated " + format(plan_nodes)
                           + " new nodes with path ids: " + format(new_nodes.ravel()))
 
             ############################################################################################################
@@ -463,7 +463,7 @@ class WeightedPoseGraph:
                 id_markers = 0
                 for i in new_nodes:
                     marker = createMarker(mtype="arrow", frame="map", colors=[0.0, 0.0, 1.0], lifetime=4, alpha=0.9,
-                                          scale=0.5)
+                                          scale=0.5, node = self.node)
                     marker.id = id_markers
                     marker.pose.position.x = plan[i].pose.position.x
                     marker.pose.position.y = plan[i].pose.position.y
@@ -476,7 +476,7 @@ class WeightedPoseGraph:
                     id_markers += 1
 
         else:  # Void returns if no points in path, most times due to frontiers lying in high potential area of cost map
-            self.get_logger().info(self.get_name() + ": No points in plan to frontier at " + format(xy_frontier) +
+            self.node.get_logger().info(self.node.get_name() + ": No points in plan to frontier at " + format(xy_frontier) +
                          ". Probably a high potential area!!")
 
         if return_path:

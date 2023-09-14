@@ -84,6 +84,11 @@ void Node::init(const ORB_SLAM2::System::eSensor & sensor)
 
   rendered_image_publisher_ = image_transport_->advertise(node_name_ + "/debug_image", 1);
   if (publish_pointcloud_param_) {
+    Eigen::Affine3d T_rt(Eigen::AngleAxisd(M_PI / 2.0, Eigen::Vector3d::UnitZ()));
+    cam_base_bia_ = Eigen::AngleAxisd( -23*3.14159265359/180.0, Eigen::Vector3d::UnitY());
+    getTfTransformMatrix(T_rt, "depth", "base_link");
+    cam_base_R_ = T_rt.rotation();
+    cam_base_T_ = T_rt.translation();
     map_points_publisher_ = create_publisher<sensor_msgs::msg::PointCloud2>(
         node_name_ + "/map_points", 1);
   }
@@ -104,6 +109,8 @@ void Node::init(const ORB_SLAM2::System::eSensor & sensor)
   
   camera_info_sub_ = create_subscription<sensor_msgs::msg::CameraInfo>(
       "/camera/camera_info", 1, std::bind(&Node::cameraInfoCallback, this, std::placeholders::_1));
+
+  Node::LoadOrbParameters_manually();
 
   service_server_ = create_service<orb_slam2_ros::srv::SaveMap>(
       node_name_ + "/save_map",
@@ -219,6 +226,22 @@ void Node::PublishPositionAsTransform(cv::Mat position)
   }
 }
 
+// void Node::PublishPositionAsTransform (cv::Mat position) {
+//     // Get transform from map to camera frame
+//     tf2::Transform tf_transform = TransformFromMat(position);
+
+//     // Make transform from camera frame to target frame
+//     tf2::Transform tf_map2target = TransformToTarget(tf_transform, camera_frame_id_param_, "base_link");
+
+//     // Make message
+//     tf2::Stamped<tf2::Transform> tf_map2target_stamped;
+//     tf_map2target_stamped = tf2::Stamped<tf2::Transform>(tf_map2target, current_frame_time_, map_frame_id_param_);
+//     geometry_msgs::msg::TransformStamped msg = tf2::toMsg(tf_map2target_stamped);
+//     msg.child_frame_id = "odom";
+//     // Broadcast tf
+//     tf_broadcaster_->sendTransform(msg);
+// }
+
 void Node::PublishPositionAsPoseStamped(cv::Mat position)
 {
   tf2::Transform grasp_tf = TransformFromMat(position);
@@ -323,6 +346,20 @@ sensor_msgs::msg::PointCloud2 Node::MapPointsToPointCloud(
       // z. Do the transformation by just reading at the position of y instead of z
       data_array[2] = -1.0 * map_points.at(i)->GetWorldPos().at<float>(1);
 
+      // Eigen::Vector3f map_pt_f(map_points.at(i)->GetWorldPos().at<float>(0),
+      //                           map_points.at(i)->GetWorldPos().at<float>(1),
+      //                           map_points.at(i)->GetWorldPos().at<float>(2));
+
+      //   Eigen::Vector3d map_pt = map_pt_f.cast<double>();
+
+      //   map_pt = cam_base_R_ * map_pt;
+      //   map_pt = cam_base_bia_ * map_pt;
+      //   map_pt += cam_base_T_;
+
+      //   data_array[0] = map_pt[0];
+      //   data_array[1] = map_pt[1];
+      //   data_array[2] = map_pt[2];
+
       // TODO(tbd): dont hack the transformation but have a central conversion
       //  function for MapPointsToPointCloud and TransformFromMat
 
@@ -386,6 +423,50 @@ void Node::LoadOrbParameters(sensor_msgs::msg::CameraInfo::SharedPtr camera_info
   if (sensor_ == ORB_SLAM2::System::STEREO || sensor_ == ORB_SLAM2::System::RGBD) {
     if (!get_parameter("camera_baseline", parameters.baseline)) {
       parameters.baseline = camera_info->p[3];
+    }
+  }
+
+  orb_slam_ = new ORB_SLAM2::System(
+      voc_file_name_param_,
+      sensor_,
+      parameters,
+      map_file_name_param_,
+      load_map_param_);
+
+  initialized_ = true;
+}
+
+void Node::LoadOrbParameters_manually()
+{
+  // Create a parameters object to pass to the Tracking system
+  ORB_SLAM2::ORBParameters parameters{};
+
+  get_parameter("camera_fps", parameters.maxFrames);
+  get_parameter("camera_rgb_encoding", parameters.RGB);
+  get_parameter("ORBextractor/nFeatures", parameters.nFeatures);
+  get_parameter("ORBextractor/scaleFactor", parameters.scaleFactor);
+  get_parameter("ORBextractor/nLevels", parameters.nLevels);
+  get_parameter("ORBextractor/iniThFAST", parameters.iniThFAST);
+  get_parameter("ORBextractor/minThFAST", parameters.minThFAST);
+
+  if (sensor_ == ORB_SLAM2::System::STEREO || sensor_ == ORB_SLAM2::System::RGBD) {
+    get_parameter("ThDepth", parameters.thDepth);
+    get_parameter("depth_map_factor", parameters.depthMapFactor);
+  }
+
+  parameters.fx = 535.4;
+  parameters.fy = 539.2;
+  parameters.cx = 320.1;
+  parameters.cy = 247.6;
+  parameters.k1 = 0.0;
+  parameters.k2 = 0.0;
+  parameters.p1 = 0.0;
+  parameters.p2 = 0.0;
+  parameters.k3 = 0.0;
+
+  if (sensor_ == ORB_SLAM2::System::STEREO || sensor_ == ORB_SLAM2::System::RGBD) {
+    if (!get_parameter("camera_baseline", parameters.baseline)) {
+      parameters.baseline = 9.052;
     }
   }
 
@@ -504,3 +585,73 @@ void Node::publishPoints(std::list<float>& l){
 
     point_publisher_->publish(msg);
 }
+
+bool Node::getTfTransformMatrix(Eigen::Affine3d &transform_matrix, const std::string source_frame, const std::string target_frame) {
+    try{
+        geometry_msgs::msg::TransformStamped transform_to_robot = tf_buffer_->lookupTransform(target_frame, source_frame,rclcpp::Time(0),rclcpp::Duration::from_seconds(0.05));
+
+        transform_matrix = tf2::transformToEigen(transform_to_robot);
+        return true;
+    }
+    catch (tf2::TransformException &ex){
+        RCLCPP_WARN(this->get_logger(),"%s",ex.what());
+        return false;
+    }
+}
+
+tf2::Transform Node::TransformToTarget (tf2::Transform tf_in, std::string frame_in, std::string frame_target) {
+    // Transform tf_in from frame_in to frame_target
+    tf2::Transform tf_map2orig = tf_in;
+    tf2::Transform tf_orig2target;
+    tf2::Transform tf_map2target;
+
+    tf2::Stamped<tf2::Transform> transformStamped_temp;
+    try {
+        // Get the transform from camera to target
+        geometry_msgs::msg::TransformStamped tf_msg = tf_buffer_->lookupTransform(frame_in, frame_target,rclcpp::Time(0));
+        // Convert to tf2
+        tf2::fromMsg(tf_msg, transformStamped_temp);
+        tf_orig2target.setBasis(transformStamped_temp.getBasis());
+        tf_orig2target.setOrigin(transformStamped_temp.getOrigin());
+
+    } catch (tf2::TransformException &ex) {
+        RCLCPP_WARN(this->get_logger(),"%s",ex.what());
+        //ros::Duration(1.0).sleep();
+        tf_orig2target.setIdentity();
+    }
+
+    // Transform from map to target
+    tf_map2target = tf_map2orig * tf_orig2target;
+
+    /*
+      // Print debug info
+      double roll, pitch, yaw;
+      // Print debug map2orig
+      tf2::Matrix3x3(tf_map2orig.getRotation()).getRPY(roll, pitch, yaw);
+      ROS_INFO("Static transform Map to Orig [%s -> %s]",
+                      map_frame_id_param_.c_str(), frame_in.c_str());
+      ROS_INFO(" * Translation: {%.3f,%.3f,%.3f}",
+                      tf_map2orig.getOrigin().x(), tf_map2orig.getOrigin().y(), tf_map2orig.getOrigin().z());
+      ROS_INFO(" * Rotation: {%.3f,%.3f,%.3f}",
+                      RAD2DEG(roll), RAD2DEG(pitch), RAD2DEG(yaw));
+      // Print debug tf_orig2target
+      tf2::Matrix3x3(tf_orig2target.getRotation()).getRPY(roll, pitch, yaw);
+      ROS_INFO("Static transform Orig to Target [%s -> %s]",
+                      frame_in.c_str(), frame_target.c_str());
+      ROS_INFO(" * Translation: {%.3f,%.3f,%.3f}",
+                      tf_orig2target.getOrigin().x(), tf_orig2target.getOrigin().y(), tf_orig2target.getOrigin().z());
+      ROS_INFO(" * Rotation: {%.3f,%.3f,%.3f}",
+                      RAD2DEG(roll), RAD2DEG(pitch), RAD2DEG(yaw));
+      // Print debug map2target
+      tf2::Matrix3x3(tf_map2target.getRotation()).getRPY(roll, pitch, yaw);
+      ROS_INFO("Static transform Map to Target [%s -> %s]",
+                      map_frame_id_param_.c_str(), frame_target.c_str());
+      ROS_INFO(" * Translation: {%.3f,%.3f,%.3f}",
+                      tf_map2target.getOrigin().x(), tf_map2target.getOrigin().y(), tf_map2target.getOrigin().z());
+      ROS_INFO(" * Rotation: {%.3f,%.3f,%.3f}",
+                      RAD2DEG(roll), RAD2DEG(pitch), RAD2DEG(yaw));
+
+     */
+    return tf_map2target;
+}
+

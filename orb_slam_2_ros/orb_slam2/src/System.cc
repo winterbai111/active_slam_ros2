@@ -120,6 +120,9 @@ System::System(const string strVocFile, const eSensor sensor, ORBParameters& par
     mpLoopCloser->SetLocalMapper(mpLocalMapper);
 
     currently_localizing_only_ = false;
+
+    pMapGraphPublisher_ = new MapGraphPublisher(mpMap,this);
+    tMapGraphPublisher_ = new thread(&ORB_SLAM2::MapGraphPublisher::run, pMapGraphPublisher_);
 }
 
 void System::TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timestamp)
@@ -651,6 +654,21 @@ bool System::LoadMap(const string &filename) {
 bool System::isRunningGBA()
 {
     return  mpLoopCloser->isRunningGBA();
+}
+
+void System::saveVertex(std::list<float>& l){
+    unique_lock<mutex> lock(mVertices_);
+    lVertices_ = l;
+}
+
+void System::saveEdges(std::list<float>& l){
+    unique_lock<mutex> lock(mEdges_);
+    lEdges_ = l;
+}
+
+void System::saveMapPoints(std::list<float>& l){
+    unique_lock<mutex> lock(mMapPoints_);
+    lMapPoints_ = l;
 }
 
 std::list<float> System::getVertex(){

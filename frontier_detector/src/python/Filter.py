@@ -182,7 +182,7 @@ def node(args=None):
     tfBuffer.wait_for_transform_async(global_frame[1:], robot_frame, rclpy.time.Time())
 
     # node.create_subscription(PointStamped, goals_topic,  callback=frontiersCallBack, callback_args=[tf_lstnr, global_frame[1:]])
-    node.create_subscription(PointStamped, goals_topic,lambda data: frontiersCallBack(data,[tfBuffer, global_frame[1:],node] ), 1 )
+    node.create_subscription(PointStamped, goals_topic,lambda data: frontiersCallBack(data,[tfBuffer, global_frame[1:],node] ), 10 )
 
     # Publishers
     pub_frontiers = node.create_publisher(Marker, node.get_name() + '/frontiers',  1)
@@ -320,7 +320,7 @@ def node(args=None):
                 centroids = np.delete(centroids, z, axis=0)
                 # node.get_logger().warn(node.get_name() + ': Frontier deleted.')
 
-        node.get_logger().debug(node.get_name() + ': Frontier centroids len=' + str(len(centroids)) + ', frontiers len=' + str(
+        node.get_logger().info(node.get_name() + ': Frontier centroids len=' + str(len(centroids)) + ', frontiers len=' + str(
             len(front)) + '. Centroids: \n' + str(centroids))
 
         # Publishing

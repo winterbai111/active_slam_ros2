@@ -103,6 +103,9 @@ add_library(orb_slam2_ros_core SHARED
   orb_slam2/src/KeyFrameDatabase.cc
   orb_slam2/src/Sim3Solver.cc
   orb_slam2/src/Initializer.cc
+  orb_slam2/src/HessianComputation.cc
+  orb_slam2/src/PinHole.cc
+  orb_slam2/src/MapGraphPublisher.cc
 )
 ament_target_dependencies(orb_slam2_ros_core
   rclcpp

@@ -147,6 +147,7 @@ def node_run():
 
     # Fetch all parameters
     map_topic = node.declare_parameter('~map_topic', '/map').value
+    # map_topic = node.declare_parameter('~map_topic', 'GridMapper_node/rectified_map').value
     frontiers_topic = node.declare_parameter('~frontiers_topic', '/filter/filtered_points').value
     n_robots = node.declare_parameter('~n_robots', 1).value
     namespace = node.declare_parameter('~namespace', 'robot_').value
@@ -154,7 +155,7 @@ def node_run():
     delay_after_assignment = node.declare_parameter('~delay_after_assignment', 0.1).value
     show_debug_path = node.declare_parameter('~show_debug_path', True).value
     exploring_time = node.declare_parameter('~max_exploring_time', 900000).value #9000
-    use_gpu = node.declare_parameter('~enable_gpu_comp', True).value
+    use_gpu = node.declare_parameter('~enable_gpu_comp', False).value
     camera_type = node.declare_parameter('~camera_type', 'RGBD').value
     # camera_type = "rgbd"
 

@@ -58,7 +58,7 @@ def generate_launch_description():
     gpu = LaunchConfiguration("gpu")
     declare_gpu_arg = DeclareLaunchArgument(
         "gpu",
-        default_value="true",
+        default_value="false",
     )
     camera_type = LaunchConfiguration("camera_type")
     declare_camera_type_arg = DeclareLaunchArgument(

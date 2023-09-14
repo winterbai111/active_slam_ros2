@@ -23,7 +23,11 @@ import os
 def generate_launch_description():
 
     config_dir = os.path.join(get_package_share_directory('rosbot_gazebo'),'params')
-    params_file = os.path.join(config_dir,'nav2_params.yaml')
+    params_file = os.path.join(config_dir,'laser.yaml')
+    # params_file = os.path.join(config_dir,'edit_3.yaml')
+    # params_file = os.path.join(config_dir,'edit_2.yaml')
+
+
 
     nav2 = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(

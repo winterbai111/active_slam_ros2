@@ -72,8 +72,11 @@ void GridMapper::Init () {
     initializeParams();
 
     // Enable publishing octomap and occupancy grid map
-    occupancy_grid_publisher_ = this->create_publisher<nav_msgs::msg::OccupancyGrid>(name_of_node_+"/projected_map", 5); //, 10
-    occupancy_grid_rect_publisher_ = this->create_publisher<nav_msgs::msg::OccupancyGrid>(name_of_node_+"/rectified_map", 5);//, 10
+    auto custom_qos = rclcpp::QoS(rclcpp::KeepLast(5)).transient_local().reliable();
+    occupancy_grid_publisher_ = this->create_publisher<nav_msgs::msg::OccupancyGrid>(name_of_node_+"/projected_map", custom_qos); //, 10
+    occupancy_grid_rect_publisher_ = this->create_publisher<nav_msgs::msg::OccupancyGrid>(name_of_node_+"/rectified_map", custom_qos);//, 10
+    // occupancy_grid_publisher_ = this->create_publisher<nav_msgs::msg::OccupancyGrid>(name_of_node_+"/projected_map", 5); //, 10
+    // occupancy_grid_rect_publisher_ = this->create_publisher<nav_msgs::msg::OccupancyGrid>(name_of_node_+"/rectified_map", 5);//, 10
 
     // Octomap subscriber
     octomap_subscriber_  = this->create_subscription<octomap_msgs::msg::Octomap>("octomapper/octomap", 10, std::bind(&GridMapper::octoMapCallback, this, std::placeholders::_1) );
